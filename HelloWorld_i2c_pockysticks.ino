@@ -19,6 +19,18 @@ int blue[3]   = { 0, 0, 100 };
 int yellow[3] = { 40, 95, 0 };
 int dimWhite[3] = { 30, 30, 30 };
 
+// Set initial color
+int redVal = black[0];
+int grnVal = black[1]; 
+int bluVal = black[2];
+
+int wait = 10;      // 10ms internal crossFade delay; increase for slower fades
+int hold = 0;       // Optional hold when a color is complete, before the next crossFade
+int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
+int loopCount = 60; // How often should DEBUG report?
+int repeat = 3;     // How many times should we loop before stopping? (0 for no stop)
+int j = 0;          // Loop counter for repeat
+
 // Uncomment whatever type you're using!
 #define DHTTYPE DHT11   // DHT 11 
 //#define DHTTYPE DHT22   // DHT 22  (AM2302)
@@ -29,6 +41,12 @@ LiquidCrystal lcd(0);
 
 // you can change the overall brightness by range 0 -> 255
 int brightness = 255;
+
+// Initialize color variables
+int prevR = redVal;
+int prevG = grnVal;
+int prevB = bluVal;
+
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // Connect pin 2 of the sensor to whatever your DHTPIN is
@@ -50,18 +68,18 @@ void setup() {
 }
 
 void loop() {
-   for (int i = 0; i < 255; i++) {
-setBacklight(i, 0, 255-i);
-delay(5);
-}
-for (int i = 0; i < 255; i++) {
-setBacklight(255-i, i, 0);
-delay(5);
-}
-for (int i = 0; i < 255; i++) {
-setBacklight(0, 255-i, i);
-delay(5);
-}
+
+  crossFade(red);
+  crossFade(green);
+  crossFade(blue);
+  crossFade(yellow);
+
+  if (repeat) { // Do we loop a finite number of times?
+    j += 1;
+    if (j >= repeat) { // Are we there yet?
+      exit(j);         // If so, stop.
+    }
+  }
   
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
@@ -79,19 +97,72 @@ delay(5);
   }
 }
 
+int calculateStep(int prevValue, int endValue) {
+  int step = endValue - prevValue; // What's the overall gap?
+  if (step) {                      // If its non-zero, 
+    step = 1020/step;              //   divide by 1020
+  } 
+  return step;
+}
 
-void setBacklight(uint8_t r, uint8_t g, uint8_t b) {
-// normalize the red LED - its brighter than the rest!
-r = map(r, 0, 255, 0, 100);
-g = map(g, 0, 255, 0, 150);
-r = map(r, 0, 255, 0, brightness);
-g = map(g, 0, 255, 0, brightness);
-b = map(b, 0, 255, 0, brightness);
-// common anode so invert!
-r = map(r, 0, 255, 255, 0);
-g = map(g, 0, 255, 255, 0);
-b = map(b, 0, 255, 255, 0);
-analogWrite(REDLITE, r);
-analogWrite(GREENLITE, g);
-analogWrite(BLUELITE, b);
+int calculateVal(int step, int val, int i) {
+
+  if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
+    if (step > 0) {              //   increment the value if step is positive...
+      val += 1;           
+    } 
+    else if (step < 0) {         //   ...or decrement it if step is negative
+      val -= 1;
+    } 
+  }
+  // Defensive driving: make sure val stays in the range 0-255
+  if (val > 255) {
+    val = 255;
+  } 
+  else if (val < 0) {
+    val = 0;
+  }
+  return val;
+}
+
+void crossFade(int color[3]) {
+  // Convert to 0-255
+  int R = (color[0] * 255) / 100;
+  int G = (color[1] * 255) / 100;
+  int B = (color[2] * 255) / 100;
+
+  int stepR = calculateStep(prevR, R);
+  int stepG = calculateStep(prevG, G); 
+  int stepB = calculateStep(prevB, B);
+
+  for (int i = 0; i <= 1020; i++) {
+    redVal = calculateVal(stepR, redVal, i);
+    grnVal = calculateVal(stepG, grnVal, i);
+    bluVal = calculateVal(stepB, bluVal, i);
+
+    analogWrite(REDLITE, redVal);   // Write current values to LED pins
+    analogWrite(GREENLITE, grnVal);      
+    analogWrite(BLUELITE, bluVal); 
+
+    delay(wait); // Pause for 'wait' milliseconds before resuming the loop
+
+    if (DEBUG) { // If we want serial output, print it at the 
+      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
+        lcd.print("Loop/RGB: #");
+        lcd.print(i);
+        lcd.print(" | ");
+        lcd.print(redVal);
+        lcd.print(" / ");
+        lcd.print(grnVal);
+        lcd.print(" / ");  
+        lcd.println(bluVal); 
+      } 
+      DEBUG += 1;
+    }
+  }
+  // Update current values for next loop
+  prevR = redVal; 
+  prevG = grnVal; 
+  prevB = bluVal;
+  delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
 }

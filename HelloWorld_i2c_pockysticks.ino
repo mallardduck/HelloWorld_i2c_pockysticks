@@ -11,9 +11,9 @@
 #define BLUELITE 7
 
 // Main program Settings
-int wait = 5;      // 10ms internal crossFade delay; increase for slower fades
+int wait = 10;      // 10ms internal crossFade delay; increase for slower fades
 int hold = 0;       // Optional hold when a color is complete, before the next crossFade
-int DEBUG = 0;      // DEBUG counter; if set to 1, will write values back via serial
+int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
 int loopCount = 60; // How often should DEBUG report?
 int repeat = 3;     // How many times should we loop before stopping? (0 for no stop)
 int j = 0;          // Loop counter for repeat
@@ -24,21 +24,39 @@ int j = 0;          // Loop counter for repeat
 // Connect via SPI. Data pin is #3, Clock is #2 and Latch is #4, Green is #5, Blue is #6
 LiquidCrystal lcd(3, 2, 4);
 
-// you can change the overall brightness by range 0 -> 255
-
-int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
 
 // Color arrays [analog values for pin output]
-int white[3]  = { 40, 0, 0 };
-int grey[3]  = { 100, 100, 100 };
-int black[3] = { 255, 255, 255 };
-int red[3]    = { 0, 255, 255 };
-int green[3]  = { 255, 0, 255 };
-int blue[3]   = { 255, 255, 0 };
-int yellow[3] = { 10, 30, 240 };
-int orange[3] = { 0, 100, 240 };
-int teal[3] = { 250, 70, 70 };
-int dimWhite[3] = { 120, 100, 100 };
+//int white[3]  = { 40, 0, 0 };
+//int grey[3]  = { 100, 100, 100 };
+//int black[3] = { 255, 255, 255 };
+//int red[3]    = { 0, 255, 255 };
+//int green[3]  = { 255, 0, 255 };
+//int blue[3]   = { 255, 255, 0 };
+//int yellow[3] = { 10, 30, 240 };
+//int orange[3] = { 0, 100, 240 };
+//int teal[3] = { 250, 70, 70 };
+//int dimWhite[3] = { 120, 100, 100 };
+
+// Color arrays (percents)
+ int black[3]  = { 100, 100, 100 };
+ int white[3]  = { 0, 0, 0 };
+ int red[3]    = { 0, 100, 100 };
+ int green[3]  = { 100, 0, 100 };
+ int blue[3]   = { 100, 100, 0 };
+ int yellow[3] = { 60, 5, 75 };
+ int dimWhite[3] = { 70, 70, 70 };
+
+// Set initial color
+int redVal = blue[0];
+int grnVal = blue[1]; 
+int bluVal = blue[2];
+
+// Initialize color variables
+int prevR = redVal;
+int prevG = grnVal;
+int prevB = bluVal;
+
+int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // Connect pin 2 of the sensor to whatever your DHTPIN is
@@ -82,12 +100,80 @@ void loop() {
     lcd.print("Humidity: ");lcd.print(h);lcd.print(" %\t");
     lcd.setCursor(0,1);
     lcd.print("Temp.: ");lcd.print(f);lcd.println(" *F");
-  }
-    analogWrite(REDLITE, dimWhite[0]);
-    analogWrite(GREENLITE, dimWhite[1]);  // IDK WTF, but at 0(for both of these) you get white, but at 255 on this one you get a purple color. 
-    analogWrite(BLUELITE, dimWhite[2]); // IDK WTF, but at 0(for both of these) you get white, but at 255 on this one you get a yellow/green color. 
-
-
+  
+  crossFade(blue);
+  crossFade(yellow);
+  crossFade(green);
+}
 }
 
+int calculateStep(int prevValue, int endValue) {
+  int step = endValue - prevValue; // What's the overall gap?
+  if (step) {                      // If its non-zero, 
+    step = 1020/step;              //   divide by 1020
+  } 
+  return step;
+}
 
+int calculateVal(int step, int val, int i) {
+
+  if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
+    if (step > 0) {              //   increment the value if step is positive...
+      val += 1;           
+    } 
+    else if (step < 0) {         //   ...or decrement it if step is negative
+      val -= 1;
+    } 
+  }
+  // Defensive driving: make sure val stays in the range 0-255
+  if (val > 255) {
+    val = 255;
+  } 
+  else if (val < 0) {
+    val = 0;
+  }
+  return val;
+}
+
+void crossFade(int color[3]) {
+  // Convert to 0-255
+  int R = (color[0] * 255) / 100;
+  int G = (color[1] * 255) / 100;
+  int B = (color[2] * 255) / 100;
+
+  int stepR = calculateStep(prevR, R);
+  int stepG = calculateStep(prevG, G); 
+  int stepB = calculateStep(prevB, B);
+
+  for (int i = 0; i <= 1020; i++) {
+    redVal = calculateVal(stepR, redVal, i);
+    grnVal = calculateVal(stepG, grnVal, i);
+    bluVal = calculateVal(stepB, bluVal, i);
+
+    analogWrite(REDLITE, redVal);   // Write current values to LED pins
+    analogWrite(GREENLITE, grnVal);      
+    analogWrite(BLUELITE, bluVal); 
+
+    delay(wait); // Pause for 'wait' milliseconds before resuming the loop
+
+    if (DEBUG) { // If we want serial output, print it at the 
+      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
+        lcd.setCursor(0,0);
+        lcd.print("Loop/RGB: #");
+        lcd.print(i);
+        lcd.setCursor(0,1);
+        lcd.print(redVal);
+        lcd.print(" / ");
+        lcd.print(grnVal);
+        lcd.print(" / ");  
+        lcd.println(bluVal); 
+      } 
+      DEBUG += 1;
+    }
+  }
+  // Update current values for next loop
+  prevR = redVal; 
+  prevG = grnVal; 
+  prevB = bluVal;
+  delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
+}

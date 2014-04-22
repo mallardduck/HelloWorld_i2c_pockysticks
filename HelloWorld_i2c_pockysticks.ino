@@ -5,25 +5,12 @@
 #include "LiquidCrystal.h"
 #include "DHT.h"
 
-#define DHTPIN 7     // what pin we're connected to
-#define REDLITE 3
-#define GREENLITE 5
-#define BLUELITE 6
+#define DHTPIN 8     // what pin we're connected to
+#define REDLITE 5
+#define GREENLITE 6
+#define BLUELITE 7
 
-// Color arrays
-int black[3]  = { 0, 0, 0 };
-int white[3]  = { 100, 100, 100 };
-int red[3]    = { 100, 0, 0 };
-int green[3]  = { 0, 100, 0 };
-int blue[3]   = { 0, 0, 100 };
-int yellow[3] = { 40, 95, 0 };
-int dimWhite[3] = { 30, 30, 30 };
-
-// Set initial color
-int redVal = blue[0];
-int grnVal = blue[1]; 
-int bluVal = blue[2];
-
+// Main program Settings
 int wait = 5;      // 10ms internal crossFade delay; increase for slower fades
 int hold = 0;       // Optional hold when a color is complete, before the next crossFade
 int DEBUG = 0;      // DEBUG counter; if set to 1, will write values back via serial
@@ -31,13 +18,16 @@ int loopCount = 60; // How often should DEBUG report?
 int repeat = 3;     // How many times should we loop before stopping? (0 for no stop)
 int j = 0;          // Loop counter for repeat
 
-// Uncomment whatever type you're using!
+// Temp/Humidity Sensor
 #define DHTTYPE DHT11   // DHT 11 
-//#define DHTTYPE DHT22   // DHT 22  (AM2302)
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
 // Connect via SPI. Data pin is #3, Clock is #2 and Latch is #4, Green is #5, Blue is #6
 LiquidCrystal lcd(3, 2, 4);
+
+// Set initial color
+int redVal = blue[0];
+int grnVal = blue[1]; 
+int bluVal = blue[2];
 
 // you can change the overall brightness by range 0 -> 255
 int brightness = 255;
@@ -48,6 +38,27 @@ int prevG = grnVal;
 int prevB = bluVal;
 
 int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
+
+// Color arrays [analog values for pin output]
+int white[3]  = { 40, 0, 0 };
+int grey[3]  = { 100, 100, 100 };
+int black[3] = { 255, 255, 255 };
+int red[3]    = { 0, 255, 255 };
+int green[3]  = { 255, 0, 255 };
+int blue[3]   = { 255, 255, 0 };
+int yellow[3] = { 10, 30, 240 };
+int orange[3] = { 0, 100, 240 };
+int teal[3] = { 250, 70, 70 };
+int dimWhite[3] = { 120, 100, 100 };
+
+// Color arrays (percents)
+// int black[3]  = { 0, 0, 0 };
+// int white[3]  = { 100, 100, 100 };
+// int red[3]    = { 100, 0, 0 };
+// int green[3]  = { 0, 100, 0 };
+// int blue[3]   = { 0, 0, 100 };
+// int yellow[3] = { 40, 95, 0 };
+// int dimWhite[3] = { 30, 30, 30 };
 
 
 // Connect pin 1 (on the left) of the sensor to +5V
@@ -68,10 +79,6 @@ void setup() {
   pinMode(REDLITE, OUTPUT);
   pinMode(GREENLITE, OUTPUT);
   pinMode(BLUELITE, OUTPUT);
-  
-    analogWrite(REDLITE, 50);   // Write current values to LED pins
-    analogWrite(GREENLITE, 170);      
-    analogWrite(BLUELITE, 255); 
 }
 
 void loop() {
@@ -96,7 +103,6 @@ void loop() {
     lcd.print("Humidity: ");lcd.print(h);lcd.print(" %\t");
     lcd.setCursor(0,1);
     lcd.print("Temp.: ");lcd.print(f);lcd.println(" *F");
-
   
 if(Temp<0){
   crossFade(blue);}

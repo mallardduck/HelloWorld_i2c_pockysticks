@@ -6,23 +6,8 @@
 #include "DHT.h"
 
 #define DHTPIN 7     // what pin we're connected to
-#define REDLITE 3
 #define GREENLITE 5
 #define BLUELITE 6
-
-// Color arrays
-int black[3]  = { 0, 0, 0 };
-int white[3]  = { 100, 100, 100 };
-int red[3]    = { 100, 0, 0 };
-int green[3]  = { 0, 100, 0 };
-int blue[3]   = { 0, 0, 100 };
-int yellow[3] = { 40, 95, 0 };
-int dimWhite[3] = { 30, 30, 30 };
-
-// Set initial color
-int redVal = blue[0];
-int grnVal = blue[1]; 
-int bluVal = blue[2];
 
 int wait = 5;      // 10ms internal crossFade delay; increase for slower fades
 int hold = 0;       // Optional hold when a color is complete, before the next crossFade
@@ -40,12 +25,6 @@ int j = 0;          // Loop counter for repeat
 LiquidCrystal lcd(3, 2, 4);
 
 // you can change the overall brightness by range 0 -> 255
-int brightness = 255;
-
-// Initialize color variables
-int prevR = redVal;
-int prevG = grnVal;
-int prevB = bluVal;
 
 int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
 
@@ -65,14 +44,9 @@ void setup() {
   lcd.setCursor(0,1);
   dht.begin();
 
-  pinMode(REDLITE, OUTPUT);
   pinMode(GREENLITE, OUTPUT);
   pinMode(BLUELITE, OUTPUT);
-  
-    analogWrite(REDLITE, 50);   // Write current values to LED pins
-    analogWrite(GREENLITE, 170);      
-    analogWrite(BLUELITE, 255); 
-}
+  }
 
 void loop() {
   if (repeat) { // Do we loop a finite number of times?
@@ -96,84 +70,12 @@ void loop() {
     lcd.print("Humidity: ");lcd.print(h);lcd.print(" %\t");
     lcd.setCursor(0,1);
     lcd.print("Temp.: ");lcd.print(f);lcd.println(" *F");
-
-  
-if(Temp<0){
-  crossFade(blue);}
-else if(Temp>0&&Temp<=45){
-crossFade(yellow);}
-else if(Temp>45){
-crossFade(green);}
-
-}
-}
-
-int calculateStep(int prevValue, int endValue) {
-  int step = endValue - prevValue; // What's the overall gap?
-  if (step) {                      // If its non-zero, 
-    step = 1020/step;              //   divide by 1020
-  } 
-  return step;
-}
-
-int calculateVal(int step, int val, int i) {
-
-  if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
-    if (step > 0) {              //   increment the value if step is positive...
-      val += 1;           
-    } 
-    else if (step < 0) {         //   ...or decrement it if step is negative
-      val -= 1;
-    } 
   }
-  // Defensive driving: make sure val stays in the range 0-255
-  if (val > 255) {
-    val = 255;
-  } 
-  else if (val < 0) {
-    val = 0;
-  }
-  return val;
+    analogWrite(GREENLITE, 255);  // IDK WTF, but at 0(for both of these) you get white, but at 255 on this one you get a purple color. 
+    analogWrite(BLUELITE, 255); // IDK WTF, but at 0(for both of these) you get white, but at 255 on this one you get a yellow/green color. 
+
+
+    lcd.setBacklight(OFF);
 }
 
-void crossFade(int color[3]) {
-  // Convert to 0-255
-  int R = (color[0] * 255) / 100;
-  int G = (color[1] * 255) / 100;
-  int B = (color[2] * 255) / 100;
 
-  int stepR = calculateStep(prevR, R);
-  int stepG = calculateStep(prevG, G); 
-  int stepB = calculateStep(prevB, B);
-
-  for (int i = 0; i <= 1020; i++) {
-    redVal = calculateVal(stepR, redVal, i);
-    grnVal = calculateVal(stepG, grnVal, i);
-    bluVal = calculateVal(stepB, bluVal, i);
-
-    analogWrite(REDLITE, redVal);   // Write current values to LED pins
-    analogWrite(GREENLITE, grnVal);      
-    analogWrite(BLUELITE, bluVal); 
-
-    delay(wait); // Pause for 'wait' milliseconds before resuming the loop
-
-    if (DEBUG) { // If we want serial output, print it at the 
-      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
-        lcd.print("Loop/RGB: #");
-        lcd.print(i);
-        lcd.print(" | ");
-        lcd.print(redVal);
-        lcd.print(" / ");
-        lcd.print(grnVal);
-        lcd.print(" / ");  
-        lcd.println(bluVal); 
-      } 
-      DEBUG += 1;
-    }
-  }
-  // Update current values for next loop
-  prevR = redVal; 
-  prevG = grnVal; 
-  prevB = bluVal;
-  delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
-}

@@ -5,7 +5,7 @@
 #include "LiquidCrystal.h"
 #include "DHT.h"
 
-#define DHTPIN 2     // what pin we're connected to
+#define DHTPIN 7     // what pin we're connected to
 #define REDLITE 3
 #define GREENLITE 5
 #define BLUELITE 6
@@ -20,11 +20,11 @@ int yellow[3] = { 40, 95, 0 };
 int dimWhite[3] = { 30, 30, 30 };
 
 // Set initial color
-int redVal = black[0];
-int grnVal = black[1]; 
-int bluVal = black[2];
+int redVal = blue[0];
+int grnVal = blue[1]; 
+int bluVal = blue[2];
 
-int wait = 10;      // 10ms internal crossFade delay; increase for slower fades
+int wait = 5;      // 10ms internal crossFade delay; increase for slower fades
 int hold = 0;       // Optional hold when a color is complete, before the next crossFade
 int DEBUG = 0;      // DEBUG counter; if set to 1, will write values back via serial
 int loopCount = 60; // How often should DEBUG report?
@@ -36,8 +36,8 @@ int j = 0;          // Loop counter for repeat
 //#define DHTTYPE DHT22   // DHT 22  (AM2302)
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
-// Connect via i2c, default address #0 (A0-A2 not jumpered)
-LiquidCrystal lcd(0);
+// Connect via SPI. Data pin is #3, Clock is #2 and Latch is #4, Green is #5, Blue is #6
+LiquidCrystal lcd(3, 2, 4);
 
 // you can change the overall brightness by range 0 -> 255
 int brightness = 255;
@@ -46,6 +46,8 @@ int brightness = 255;
 int prevR = redVal;
 int prevG = grnVal;
 int prevB = bluVal;
+
+int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
 
 
 // Connect pin 1 (on the left) of the sensor to +5V
@@ -56,24 +58,23 @@ int prevB = bluVal;
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
+  Serial.begin(9600);
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
-  lcd.println("DHT11 test!");
+  lcd.print("DHT11 test!");
   lcd.setCursor(0,1);
   dht.begin();
 
   pinMode(REDLITE, OUTPUT);
   pinMode(GREENLITE, OUTPUT);
   pinMode(BLUELITE, OUTPUT);
+  
+    analogWrite(REDLITE, 50);   // Write current values to LED pins
+    analogWrite(GREENLITE, 170);      
+    analogWrite(BLUELITE, 255); 
 }
 
 void loop() {
-
-  crossFade(red);
-  crossFade(green);
-  crossFade(blue);
-  crossFade(yellow);
-
   if (repeat) { // Do we loop a finite number of times?
     j += 1;
     if (j >= repeat) { // Are we there yet?
@@ -88,13 +89,23 @@ void loop() {
   float f = ((9/5)*Temp)+32;
 
   // check if returns are valid, if they are NaN (not a number) then something went wrong!
-  if (isnan(Temp) || isnan(h)) {
+  if ( isnan(h)) {
     lcd.println("Failed to read from DHT");
   } else {
+    lcd.setCursor(0,0);
     lcd.print("Humidity: ");lcd.print(h);lcd.print(" %\t");
-    lcd.print("");
-    lcd.print("Temperature: ");lcd.print(f);lcd.println(" *F");
-  }
+    lcd.setCursor(0,1);
+    lcd.print("Temp.: ");lcd.print(f);lcd.println(" *F");
+
+  
+if(Temp<0){
+  crossFade(blue);}
+else if(Temp>0&&Temp<=45){
+crossFade(yellow);}
+else if(Temp>45){
+crossFade(green);}
+
+}
 }
 
 int calculateStep(int prevValue, int endValue) {

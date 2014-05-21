@@ -2,6 +2,21 @@
 //This is a work in progress to make a Sproutboard fucntion for my project.
 //Version 0.0.1
 //Branch SproutOUT
+
+/*
+Analog I/O:
+None In Use
+
+Digital I/O:
+Digital 2 - LCD [Clock]
+Digital 3 - LCD [Data]
+Digital 4 - LCD [Latch]
+Digital 5 - LCD Red
+Digital 6 - LCD Green
+Digital 7 - LCD Blue
+Digital 8 - DHT11
+*/
+
 #include "Wire.h"
 #include "LiquidCrystal.h"
 #include "DHT.h"

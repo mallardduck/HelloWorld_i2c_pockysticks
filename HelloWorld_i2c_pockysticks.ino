@@ -10,6 +10,27 @@
 #define GREENLITE 6
 #define BLUELITE 7
 
+// Color arrays [analog values for pin output]
+int white[3]  = { 40, 0, 0 };
+int grey[3]  = { 100, 100, 100 };
+int black[3] = { 255, 255, 255 };
+int red[3]    = { 0, 255, 255 };
+int green[3]  = { 255, 0, 255 };
+int blue[3]   = { 255, 255, 0 };
+int yellow[3] = { 10, 30, 240 };
+int orange[3] = { 0, 100, 240 };
+int teal[3] = { 250, 70, 70 };
+int dimWhite[3] = { 120, 100, 100 };
+
+// Color arrays (percents)
+// int black[3]  = { 0, 0, 0 };
+// int white[3]  = { 100, 100, 100 };
+// int red[3]    = { 100, 0, 0 };
+// int green[3]  = { 0, 100, 0 };
+// int blue[3]   = { 0, 0, 100 };
+// int yellow[3] = { 40, 95, 0 };
+// int dimWhite[3] = { 30, 30, 30 };
+
 // Main program Settings
 int wait = 5;      // 10ms internal crossFade delay; increase for slower fades
 int hold = 0;       // Optional hold when a color is complete, before the next crossFade
@@ -38,28 +59,6 @@ int prevG = grnVal;
 int prevB = bluVal;
 
 int blueTemp= 0; int greenTemp= 0; int redTemp= 0;
-
-// Color arrays [analog values for pin output]
-int white[3]  = { 40, 0, 0 };
-int grey[3]  = { 100, 100, 100 };
-int black[3] = { 255, 255, 255 };
-int red[3]    = { 0, 255, 255 };
-int green[3]  = { 255, 0, 255 };
-int blue[3]   = { 255, 255, 0 };
-int yellow[3] = { 10, 30, 240 };
-int orange[3] = { 0, 100, 240 };
-int teal[3] = { 250, 70, 70 };
-int dimWhite[3] = { 120, 100, 100 };
-
-// Color arrays (percents)
-// int black[3]  = { 0, 0, 0 };
-// int white[3]  = { 100, 100, 100 };
-// int red[3]    = { 100, 0, 0 };
-// int green[3]  = { 0, 100, 0 };
-// int blue[3]   = { 0, 0, 100 };
-// int yellow[3] = { 40, 95, 0 };
-// int dimWhite[3] = { 30, 30, 30 };
-
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // Connect pin 2 of the sensor to whatever your DHTPIN is

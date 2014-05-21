@@ -1,6 +1,7 @@
-// Example testing sketch for various DHT humidity/temperature sensors
-// Written by ladyada, public domain
-
+//Pockysticks SproutBox "Hello World Edition"
+//This is a work in progress to make a Sproutboard fucntion for my project.
+//Version 0.0.1
+//Branch SproutOUT
 #include "Wire.h"
 #include "LiquidCrystal.h"
 #include "DHT.h"

@@ -1,8 +1,9 @@
 //Pockysticks SproutBox
 //This is a work in progress to make a Sproutboard fucntion for my project.
 //Version 0.0.1
-//Branch RGBtesting
+//Branch RGBserialTEST
 
+#include <SoftwareSerial.h>
 #include "Wire.h"
 #include "LiquidCrystal.h"
 #include "DHT.h"
@@ -22,10 +23,6 @@ int j = 0;          // Loop counter for repeat
 
 // Temp/Humidity Sensor
 #define DHTTYPE DHT11   // DHT 11 
-
-// Connect via SPI. Data pin is #3, Clock is #2 and Latch is #4, Green is #5, Blue is #6
-LiquidCrystal lcd(3, 2, 4);
-
 
 // Color arrays [analog values for pin output]
   int white[3]  = { 40, 0, 0 };
@@ -54,12 +51,18 @@ int prevR = redVal;  int prevG = grnVal;  int prevB = bluVal;
 
 DHT dht(DHTPIN, DHTTYPE);
 
+// Create a software serial port!
+SoftwareSerial lcd = SoftwareSerial(0,2); 
+
 void setup() {
-  Serial.begin(9600);
+  lcd.begin(9600);
   // set up the LCD's number of rows and columns: 
-  lcd.begin(16, 2);
+  lcd.write(0xFE);
+  lcd.write(0xD1);
+  lcd.write(16);  // 16 columns
+  lcd.write(2);   // 2 rows
+  lcd.setCursor(0,0);
   lcd.print("DHT11 test!");
-  lcd.setCursor(0,1);
   dht.begin();
 
   pinMode(REDLITE, OUTPUT);
